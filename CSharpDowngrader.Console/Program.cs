@@ -20,7 +20,11 @@ namespace Redacted.Console
             SyntaxNode rootNode = tree.GetRoot();
             foreach (var nullableTypeSyntaxNode in rootNode.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.NullableTypeSyntax>())
             {
-                rootNode = rootNode.ReplaceNode(nullableTypeSyntaxNode, nullableTypeSyntaxNode.ElementType);
+                // e.g., take this: ' string? '
+                // which is actually these two tokens: ' string' and '? '
+                // and finally, from the second token, retain the trailing trivia
+                var elementType = nullableTypeSyntaxNode.ElementType.WithTrailingTrivia(nullableTypeSyntaxNode.QuestionToken.TrailingTrivia);
+                rootNode = rootNode.ReplaceNode(nullableTypeSyntaxNode, elementType);
             }
 
             var result = rootNode.ToFullString();
